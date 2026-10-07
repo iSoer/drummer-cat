@@ -1,4 +1,4 @@
-Lnode_modules/
+node_modules/
 dist/
 .idea/
 .DS_Store
