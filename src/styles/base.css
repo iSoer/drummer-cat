@@ -129,6 +129,30 @@ body {
   transition: opacity 300ms ease;
 }
 
+.scene .burst {
+  fill: #fff6c7;
+  stroke: var(--outline);
+  stroke-width: 0.12;
+  stroke-linejoin: round;
+}
+
+.scene .speed-line {
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.scene .claws line {
+  stroke: var(--outline);
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.scene .camera {
+  will-change: transform;
+}
+
 .scene .hint {
   font-weight: 800;
   font-size: 28px;

@@ -1,3 +1,5 @@
+import type { StrikeId } from './strikes';
+
 /** Идентификаторы котов. */
 export type CatId = 'ginger' | 'coal' | 'siam';
 /** Идентификаторы наборов предметов. */
@@ -21,6 +23,8 @@ export interface CatSkin {
   palette: CatPalette;
   /** Символ лапы в спрайте, например '#paw-ginger'. */
   pawSymbol: string;
+  /** Стиль удара (см. content/strikes.ts). */
+  strike: StrikeId;
 }
 
 export interface GameObject {

@@ -44,6 +44,10 @@ tests/        юнит-тесты логики
 
 ## Как добавить кота
 
-1. Палитра и имя — в `src/content/cats.ts`.
+1. Палитра, имя и стиль удара (`strike`) — в `src/content/cats.ts`.
 2. Лапа — `<symbol id="paw-<id>" viewBox="0 0 240 320" overflow="visible">` в `src/content/svg/paws.svg`.
 3. Портрет рисуется параметрически в `src/render/portrait.ts` по палитре; особые отметины — в функции `markings`.
+
+## Как добавить стиль удара
+
+Стили лежат в `src/content/strikes.ts`. Стиль задаёт позу замаха `raised(power)`, кадры удара `swing(power, from)` и возврата `back(power, to)`, траекторию сноса `knock(power)`, точку удара, угол линий скорости и когтей, множитель тряски. `power` от 0 до 1 растёт с уровнем ярости (`powerOf(level)`). Удар должен начинаться с кадра `from`, а возврат заканчиваться кадром `to` — это проверяют тесты в `tests/strikes.test.ts`.

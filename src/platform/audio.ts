@@ -29,10 +29,11 @@ export class Sfx {
     if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend();
   }
 
-  /** Удар лапы. */
-  thwack(): void {
+  /** Удар лапы; с силой громче, ниже и с «ухом» в басу. */
+  thwack(power = 0): void {
     if (!this.ready()) return;
-    this.noiseBurst(0.045, 'lowpass', 500, 0.9);
+    this.noiseBurst(0.045 + 0.025 * power, 'lowpass', 520 - 160 * power, 0.9 + 0.5 * power);
+    if (power >= 0.5) this.tone('sine', 95, 45, 0.09, 0.35 * power);
   }
 
   /** Удар без сноса. */

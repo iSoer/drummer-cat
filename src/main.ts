@@ -10,6 +10,7 @@ import pawsSvg from './content/svg/paws.svg?raw';
 
 import { CATS, getCat } from './content/cats';
 import { SETS, getSet } from './content/sets';
+import { getStrike, powerOf } from './content/strikes';
 import type { CatId, SetId } from './content/types';
 import { Engine } from './core/engine';
 import { createStore } from './core/store';
@@ -20,7 +21,7 @@ import { Hud } from './render/hud';
 import { ObjectView } from './render/objectView';
 import { PawView } from './render/paw';
 import { PortraitView, renderFace } from './render/portrait';
-import { buildScene, setBackground, setVignette, stepBob } from './render/scene';
+import { buildScene, cameraShake, setBackground, setVignette, stepBob } from './render/scene';
 import { Sfx } from './platform/audio';
 import { Haptics } from './platform/haptics';
 import { clearSave, installFlushOnHide, loadSave, scheduleSave } from './platform/storage';
@@ -51,6 +52,7 @@ async function boot(): Promise<void> {
 
   let cat = getCat(save.cat);
   let set = getSet(save.set);
+  let strike = getStrike(cat.strike);
 
   const engine = new Engine(set, { knocked: save.knocked, hits: save.hits });
   const meter = new TpsMeter();
@@ -59,8 +61,8 @@ async function boot(): Promise<void> {
   const stage = $('#stage');
   const parts = buildScene(stage);
   setBackground(parts, set.backgroundSymbol);
-  const paw = new PawView(parts.paw, parts.pawUse, anims);
-  paw.setSkin(cat.pawSymbol);
+  const paw = new PawView(parts.paw, parts.pawUse, anims, strike);
+  paw.setSkin(cat.pawSymbol, strike);
   const objView = new ObjectView(parts.objects, anims);
   objView.show(engine.current.obj, engine.current.hp, engine.current.maxHp, engine.next.obj);
   const fx = new Fx(parts.fx, anims);
@@ -81,6 +83,7 @@ async function boot(): Promise<void> {
     portrait.setLevel(level);
     hud.setLevel(level);
     setVignette(parts, level);
+    paw.setPower(powerOf(level));
     paw.setIdle(level === 0);
     document.body.dataset.level = String(level);
   };
@@ -109,25 +112,29 @@ async function boot(): Promise<void> {
       hits: engine.counters.hits,
       bestTps: Math.max(prev.bestTps, Math.round(snap.tps * 10) / 10),
     });
-    sfx.thwack();
+    const power = powerOf(level);
+    sfx.thwack(power);
+    fx.speedLines(strike, power, mul);
 
     paw.swing(mul, () => {
+      cameraShake(parts, anims, (2 + 9 * power) * strike.shakeMul * (power > 0 ? 1 : 0));
+      fx.impactBurst(strike.impact, power);
+      if (strike.clawAngle !== null) fx.clawMarks(strike.impact, strike.clawAngle, power);
       for (const ev of events) {
         switch (ev.type) {
           case 'wobble':
             objView.setHp(ev.hp, ev.maxHp);
             objView.wobble(mul);
             sfx.bonk();
-            haptics.impact('medium');
+            haptics.impact(power >= 0.75 ? 'heavy' : 'medium');
             break;
           case 'knock': {
-            const dur = objView.knock(mul);
-            if (ev.obj.breakable) fx.shardsBurst(ev.obj, mul);
-            fx.hitText(ev.obj.hitText, mul);
+            objView.knock(mul, strike.knock(power));
+            if (ev.obj.breakable) fx.shardsBurst(ev.obj, mul, power);
+            fx.hitText(ev.obj.hitText, mul, power);
             hud.setCounter(ev.knocked, true);
             sfx.play(ev.obj.sfx);
-            haptics.impact(ev.obj.size === 'L' ? 'heavy' : 'light');
-            void dur;
+            haptics.impact(ev.obj.size === 'L' || power >= 0.75 ? 'heavy' : 'light');
             break;
           }
           case 'step': {
@@ -174,7 +181,8 @@ async function boot(): Promise<void> {
 
   const applyCat = (id: CatId): void => {
     cat = getCat(id);
-    paw.setSkin(cat.pawSymbol);
+    strike = getStrike(cat.strike);
+    paw.setSkin(cat.pawSymbol, strike);
     portrait.setCat(cat);
     store.set({ cat: id });
     tgSelectionChanged();

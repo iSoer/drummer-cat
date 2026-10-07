@@ -1,4 +1,5 @@
 import { CATS } from '../content/cats';
+import { getStrike } from '../content/strikes';
 import { SETS } from '../content/sets';
 import type { CatId, SetId } from '../content/types';
 import { renderFace } from '../render/portrait';
@@ -8,12 +9,13 @@ export interface SkinsCallbacks {
   onSet(id: SetId): void;
 }
 
-function catCard(id: CatId, name: string, desc: string, face: string, selected: boolean): string {
+function catCard(id: CatId, name: string, desc: string, strike: string, face: string, selected: boolean): string {
   return `
     <button class="card ${selected ? 'card--selected' : ''}" type="button" data-cat="${id}">
       <svg class="card__preview" viewBox="0 0 120 120">${face}</svg>
       <span class="card__name">${name}</span>
       <span class="card__desc">${desc}</span>
+      <span class="card__strike">Удар: ${strike}</span>
     </button>`;
 }
 
@@ -46,7 +48,7 @@ export function buildSkinsPanel(currentCat: CatId, currentSet: SetId, cb: SkinsC
       <button class="tabs__tab" type="button" data-tab="sets">Предметы</button>
     </div>
     <div class="tabs__panel" data-panel="cats">
-      <div class="cards">${CATS.map((c) => catCard(c.id, c.name, c.description, renderFace(1, c), c.id === currentCat)).join('')}</div>
+      <div class="cards">${CATS.map((c) => catCard(c.id, c.name, c.description, getStrike(c.strike).name, renderFace(1, c), c.id === currentCat)).join('')}</div>
     </div>
     <div class="tabs__panel" data-panel="sets" hidden>
       <div class="cards cards--list">${SETS.map((s) => setCard(s, s.id === currentSet)).join('')}</div>

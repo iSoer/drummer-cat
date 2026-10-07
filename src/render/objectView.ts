@@ -1,3 +1,4 @@
+import type { KnockVector } from '../content/strikes';
 import type { GameObject } from '../content/types';
 import { AnimGroup } from './anim';
 import { FAR_OFFSET_X, FAR_OFFSET_Y, FAR_SCALE, OBJ_BASE, OBJ_SIZE } from './scene';
@@ -110,26 +111,30 @@ export class ObjectView {
     );
   }
 
-  /** Снос: текущий слот улетает, активным становится другой слот. */
-  knock(speedMul: number): number {
+  /** Снос по траектории стиля удара: текущий слот улетает, активным становится другой слот. */
+  knock(speedMul: number, v: KnockVector): number {
     const s = this.cur;
     this.pips.style.display = 'none';
     const dur = 320 * speedMul;
-    this.anims.run(
-      s.g,
-      [
-        { transform: 'translate(0,0) rotate(0deg) scale(1)', opacity: 1, offset: 0 },
-        { transform: 'translate(-60px, 10px) rotate(-40deg) scale(0.95)', opacity: 1, offset: 0.35 },
-        { transform: 'translate(-110px, 130px) rotate(-80deg) scale(0.85)', opacity: 1, offset: 0.7 },
-        { transform: 'translate(-140px, 260px) rotate(-110deg) scale(0.7)', opacity: 0, offset: 1 },
-      ],
-      { duration: dur, easing: 'ease-in' },
-      () => {
-        s.g.style.visibility = 'hidden';
-        s.g.style.transform = NEAR_POSE;
-        s.g.style.opacity = '1';
-      },
-    );
+    const at = (t: number, rotT: number, sc: number, op: number, offset: number): Keyframe => ({
+      transform: `translate(${(v.dx * t).toFixed(1)}px, ${(v.dy * t).toFixed(1)}px) rotate(${(v.rot * rotT).toFixed(1)}deg) scale(${sc})`,
+      opacity: op,
+      offset,
+    });
+    const frames: Keyframe[] = v.squash
+      ? [
+          at(0, 0, 1, 1, 0),
+          { transform: 'translate(0, 0) rotate(0deg) scale(1.18, 0.78)', opacity: 1, offset: 0.14 },
+          at(0.3, 0.3, 0.98, 1, 0.42),
+          at(0.7, 0.72, 0.85, 1, 0.74),
+          at(1, 1, 0.7, 0, 1),
+        ]
+      : [at(0, 0, 1, 1, 0), at(0.35, 0.36, 0.95, 1, 0.35), at(0.72, 0.73, 0.85, 1, 0.7), at(1, 1, 0.7, 0, 1)];
+    this.anims.run(s.g, frames, { duration: dur, easing: 'ease-in' }, () => {
+      s.g.style.visibility = 'hidden';
+      s.g.style.transform = NEAR_POSE;
+      s.g.style.opacity = '1';
+    });
     this.active = 1 - this.active;
     return dur;
   }
