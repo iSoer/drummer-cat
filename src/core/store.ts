@@ -56,7 +56,7 @@ export function normalizeSave(raw: unknown): SaveV1 {
   const r = raw as Partial<SaveV1>;
   const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : d);
   const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
-  const cats: CatId[] = ['ginger', 'coal', 'siam', 'marine', 'wizard', 'sherlock'];
+  const cats: CatId[] = ['ginger', 'coal', 'siam', 'marine', 'wizard', 'sherlock', 'vanya', 'elman', 'ksyusha', 'kama'];
   const sets: SetId[] = ['kitchen', 'desk', 'living', 'spacebase', 'magic', 'detective'];
   return {
     v: 1,

@@ -155,6 +155,11 @@ body {
   stroke-dasharray: 0.25 0.12;
 }
 
+.scene .mote {
+  stroke: var(--outline);
+  stroke-width: 0.8;
+}
+
 .scene .claws line {
   stroke: var(--outline);
   stroke-width: 5;

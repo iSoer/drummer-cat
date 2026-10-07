@@ -1,5 +1,5 @@
 /** Стиль удара кота: позы лапы, траектория сноса, эффекты. Сила 0..1 растёт с уровнем ярости. */
-export type StrikeId = 'swipe' | 'jab' | 'slam' | 'pump' | 'spell' | 'deduce';
+export type StrikeId = 'swipe' | 'jab' | 'slam' | 'pump' | 'spell' | 'deduce' | 'wave' | 'toast' | 'cuddle' | 'slash';
 
 export interface KnockVector {
   dx: number;
@@ -34,6 +34,10 @@ export interface StrikeStyle {
   preImpact?: 'bolt' | 'ring';
   /** Откуда летят искры (для 'bolt'), координаты сцены. */
   wandTip?: { x: number; y: number };
+  /** Частицы с предмета в лапе в момент удара: пепел с сигареты сыплется вниз, брют из бокала разлетается дугой. */
+  impactFx?: 'ash' | 'splash';
+  /** Откуда летят частицы `impactFx`: положение кончика предмета в позе контакта, координаты сцены. */
+  propTip?: { x: number; y: number };
   /** Поза замаха; lift — дополнительный подъём в градусах (для «дыхания»). */
   raised(power: number, lift?: number): string;
   /** Кадры удара от текущей позы `from` до позы контакта. */
@@ -238,7 +242,135 @@ function hitDeduce(p: number): string {
   return `rotate(${f(-2 - 2 * p)}deg) translate(-20px, ${f(10 + 4 * p)}px) scale(${f(1.02 + 0.04 * p)})`;
 }
 
-export const STRIKES: Record<StrikeId, StrikeStyle> = { swipe: SWIPE, jab: JAB, slam: SLAM, pump: PUMP, spell: SPELL, deduce: DEDUCE };
+const WAVE: StrikeStyle = {
+  id: 'wave',
+  name: 'Отмашка',
+  hint: 'Ленивый мах тыльной стороной, с сигареты сыплется пепел',
+  swingMs: 80,
+  backMs: 180,
+  swingEasing: 'cubic-bezier(0.45, 0, 0.9, 0.5)',
+  speedAngle: 185,
+  clawAngle: null,
+  shakeMul: 0.9,
+  impact: { x: 184, y: 442 },
+  impactFx: 'ash',
+  propTip: { x: 96, y: 352 },
+  raised: (p, lift = 0) => `translate(${f(-20 * p)}px, ${f(8 * p)}px) rotate(${f(24 + 8 * p + lift)}deg)`,
+  swing(p, from) {
+    return [{ transform: from, offset: 0 }, { transform: hitWave(p), offset: 1 }];
+  },
+  back(p, to) {
+    return [
+      { transform: hitWave(p), offset: 0 },
+      { transform: `translate(${f(-20 * p)}px, ${f(8 * p)}px) rotate(${f(30 + 10 * p)}deg)`, offset: 0.65 },
+      { transform: to, offset: 1 },
+    ];
+  },
+  knock: (p) => ({ dx: -(150 + 80 * p), dy: 250 - 40 * p, rot: -(100 + 70 * p), squash: false }),
+};
+function hitWave(p: number): string {
+  return `rotate(${f(-5 - 9 * p)}deg) scale(${f(1.04 + 0.06 * p)})`;
+}
+
+const TOAST: StrikeStyle = {
+  id: 'toast',
+  name: 'Тост',
+  hint: 'Дерзкий взмах с бокалом, брют летит во все стороны',
+  swingMs: 65,
+  backMs: 160,
+  swingEasing: 'cubic-bezier(0.5, 0, 1, 0.5)',
+  speedAngle: 205,
+  clawAngle: null,
+  shakeMul: 1.1,
+  impact: { x: 184, y: 436 },
+  burstColor: '#F7E7A1',
+  minBurst: 0.2,
+  impactFx: 'splash',
+  propTip: { x: 94, y: 268 },
+  raised: (p, lift = 0) => `translate(${f(-10 * p)}px, ${f(-6 - 10 * p)}px) rotate(${f(18 + 6 * p + lift)}deg)`,
+  swing(p, from) {
+    return [
+      { transform: from, offset: 0 },
+      { transform: `translate(${f(-14 * p)}px, ${f(-28 - 12 * p)}px) rotate(${f(26 + 6 * p)}deg)`, offset: 0.3 },
+      { transform: hitToast(p), offset: 1 },
+    ];
+  },
+  back(p, to) {
+    return [
+      { transform: hitToast(p), offset: 0 },
+      { transform: `rotate(${f(20 + 6 * p)}deg) translate(0px, ${f(-14 - 8 * p)}px)`, offset: 0.55 },
+      { transform: to, offset: 1 },
+    ];
+  },
+  knock: (p) => ({ dx: -(180 + 90 * p), dy: 210 - 30 * p, rot: -(120 + 90 * p), squash: false }),
+};
+function hitToast(p: number): string {
+  return `rotate(${f(-6 - 10 * p)}deg) scale(${f(1.06 + 0.06 * p)})`;
+}
+
+const CUDDLE: StrikeStyle = {
+  id: 'cuddle',
+  name: 'Плюш',
+  hint: 'Мягкий шлепок игрушкой сверху, предмет подпрыгивает и падает',
+  swingMs: 90,
+  backMs: 200,
+  swingEasing: 'cubic-bezier(0.4, 0, 0.7, 1)',
+  speedAngle: 100,
+  clawAngle: null,
+  shakeMul: 0.45,
+  impact: { x: 180, y: 446 },
+  burstColor: '#FF9EC4',
+  minBurst: 0.3,
+  raised: (p, lift = 0) => `rotate(${f(12 + 4 * p + lift)}deg) translate(${f(-10 - 6 * p)}px, ${f(-60 - 24 * p - lift * 2)}px)`,
+  swing(p, from) {
+    return [
+      { transform: from, offset: 0 },
+      { transform: `rotate(${f(13 + 4 * p)}deg) translate(${f(-12 - 6 * p)}px, ${f(-76 - 30 * p)}px)`, offset: 0.35 },
+      { transform: hitCuddle(p), offset: 1 },
+    ];
+  },
+  back(p, to) {
+    return [
+      { transform: hitCuddle(p), offset: 0 },
+      { transform: `rotate(${f(13 + 4 * p)}deg) translate(${f(-12 - 6 * p)}px, ${f(-70 - 26 * p)}px)`, offset: 0.7 },
+      { transform: to, offset: 1 },
+    ];
+  },
+  knock: (p) => ({ dx: -(60 + 40 * p), dy: 270, rot: -(70 + 40 * p), squash: true, lift: -(20 + 30 * p) }),
+};
+function hitCuddle(p: number): string {
+  return `rotate(${f(-3 - 2 * p)}deg) translate(-12px, ${f(16 + 10 * p)}px) scale(${f(1.06 + 0.06 * p)}, 0.98)`;
+}
+
+const SLASH: StrikeStyle = {
+  id: 'slash',
+  name: 'Маникюр',
+  hint: 'Хлёсткий взмах длинными ногтями, остаются царапины',
+  swingMs: 55,
+  backMs: 130,
+  swingEasing: 'cubic-bezier(0.55, 0, 1, 0.45)',
+  speedAngle: 200,
+  clawAngle: -35,
+  shakeMul: 1.2,
+  impact: { x: 184, y: 438 },
+  raised: (p, lift = 0) => `translate(${f(-30 - 10 * p)}px, ${f(-20 - 10 * p)}px) rotate(${f(22 + 10 * p + lift)}deg)`,
+  swing(p, from) {
+    return [{ transform: from, offset: 0 }, { transform: hitSlash(p), offset: 1 }];
+  },
+  back(p, to) {
+    return [
+      { transform: hitSlash(p), offset: 0 },
+      { transform: `translate(${f(-34 - 10 * p)}px, ${f(-14 - 10 * p)}px) rotate(${f(28 + 12 * p)}deg)`, offset: 0.6 },
+      { transform: to, offset: 1 },
+    ];
+  },
+  knock: (p) => ({ dx: -(200 + 100 * p), dy: 230 - 40 * p, rot: -(130 + 100 * p), squash: false }),
+};
+function hitSlash(p: number): string {
+  return `translate(${f(-8 * p)}px, ${f(10 + 6 * p)}px) rotate(${f(-8 - 14 * p)}deg) scale(${f(1.05 + 0.08 * p)})`;
+}
+
+export const STRIKES: Record<StrikeId, StrikeStyle> = { swipe: SWIPE, jab: JAB, slam: SLAM, pump: PUMP, spell: SPELL, deduce: DEDUCE, wave: WAVE, toast: TOAST, cuddle: CUDDLE, slash: SLASH };
 
 export function getStrike(id: StrikeId): StrikeStyle {
   return STRIKES[id];

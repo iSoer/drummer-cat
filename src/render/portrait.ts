@@ -5,6 +5,13 @@ const BG_BY_LEVEL = ['#CFD8DC', '#E3EDF5', '#FCE4B8', '#FFB74D', '#E53935', '#B7
 const EAR_ANGLE = [10, 0, -6, 20, 45, 62];
 const HEAD = { cx: 60, cy: 66, rx: 40, ry: 34 };
 
+/** Тёмная ли шерсть: на ней обводка #1F1A17 не читается (закрытый глаз, ресницы). */
+function isDark(hex: string): boolean {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = 0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
+  return lum < 60;
+}
+
 /** Зеркально отразить x относительно центра портрета. */
 const mx = (x: number) => 120 - x;
 
@@ -46,6 +53,29 @@ function markings(cat: CatSkin): string {
       return `<ellipse cx="60" cy="82" rx="18" ry="11" fill="${p.fur2}" opacity="0.55"/>`;
     case 'siam':
       return `<ellipse cx="60" cy="76" rx="24" ry="19" fill="${p.fur2}"/>`;
+    case 'vanya':
+      return `
+        <path d="M48 40 l4 12 l4 -12 Z M56 37 l4 15 l4 -15 Z M64 40 l4 12 l4 -12 Z" fill="${p.fur2}" opacity="0.55"/>
+        <ellipse cx="60" cy="80" rx="17" ry="10" fill="#E9D3B6"/>
+        <path d="M40 84 C42 102 50 108 60 108 C70 108 78 102 80 84 C72 92 48 92 40 84 Z" fill="${p.fur2}" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M50 94 l2 8 M60 96 v9 M70 94 l-2 8" fill="none" stroke="#6B4425" stroke-width="2" stroke-linecap="round"/>`;
+    case 'elman':
+      return `
+        <path d="M42 38 C46 22 62 18 74 28 C66 28 58 32 52 40 Z" fill="${p.fur2}" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M46 34 C52 26 62 24 70 28" fill="none" stroke="#C39BD3" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="71" cy="74" r="1.8" fill="${OUTLINE}"/>
+        <circle cx="27" cy="52" r="3" fill="none" stroke="#F5C542" stroke-width="2.5"/>`;
+    case 'ksyusha':
+      return `
+        <path d="M60 50 C54 40 44 44 48 52 L60 62 L72 52 C76 44 66 40 60 50 Z" fill="${p.fur2}" opacity="0.7"/>
+        <circle cx="35" cy="75" r="6" fill="${p.fur2}" opacity="0.5"/>
+        <circle cx="85" cy="75" r="6" fill="${p.fur2}" opacity="0.5"/>
+        <ellipse cx="60" cy="82" rx="16" ry="9" fill="#FFFFFF" opacity="0.6"/>`;
+    case 'kama':
+      return `
+        <ellipse cx="60" cy="82" rx="18" ry="11" fill="${p.fur2}" opacity="0.5"/>
+        <ellipse cx="60" cy="82" rx="8" ry="2.8" fill="#D81B60"/>
+        <circle cx="72" cy="73" r="1.6" fill="#8A7A94"/>`;
   }
 }
 
@@ -54,7 +84,7 @@ function eye(cx: number, cat: CatSkin, level: number): string {
   const eyeColor = cat.palette.eye;
   switch (level) {
     case 0: {
-      const stroke = cat.id === 'siam' ? cat.palette.fur : OUTLINE;
+      const stroke = cat.id === 'siam' ? cat.palette.fur : isDark(cat.palette.fur) ? cat.palette.innerEar : OUTLINE;
       return `<path d="M${cx - 9} ${cy} q9 7 18 0" fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round"/>`;
     }
     case 1:
@@ -170,8 +200,17 @@ function effects(cat: CatSkin, level: number): string {
   }
 }
 
-/** Головной убор: часть под глазами (шляпа) и поверх (очки). Наклоняется с ростом ярости. */
-function accessory(cat: CatSkin, level: number): { behind: string; front: string } {
+interface Accessory {
+  /** Рисуется после головы и отметин, до глаз: шляпа, шлем, причёска. */
+  behind: string;
+  /** Рисуется поверх всего: очки, усы, ресницы. */
+  front: string;
+  /** Оставить уши: для очков, усов и причёсок, которые не закрывают макушку. */
+  keepEars?: boolean;
+}
+
+/** Головной убор: часть под глазами (шляпа) и поверх (очки). Наклоняется с ростом ярости через wrap(). */
+function accessory(cat: CatSkin, level: number): Accessory {
   const tilt = -EAR_ANGLE[level] * 0.35;
   const lift = level >= 4 ? -3 : 0;
   const wrap = (inner: string) => `<g transform="translate(0 ${lift}) rotate(${tilt.toFixed(1)} 60 44)">${inner}</g>`;
@@ -210,6 +249,53 @@ function accessory(cat: CatSkin, level: number): { behind: string; front: string
           <circle cx="60" cy="17" r="3.5" fill="#6B4F35" stroke="${OUTLINE}" stroke-width="2"/>`),
         front: '',
       };
+    case 'beard':
+      // Усы поверх рта (закрывают верхнюю губу), борода — в markings(), чтобы оскал был виден. Не наклоняются.
+      return {
+        behind: '',
+        front: `<path d="M60 81 C56 75 46 74 40 80 C44 85 54 86 60 82 C66 86 76 85 80 80 C74 74 64 75 60 81 Z" fill="${cat.palette.fur2}" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>`,
+        keepEars: true,
+      };
+    case 'shades':
+      // Золотые очки-авиаторы с тонированными стёклами: глаза просвечивают, на 5-м уровне светятся сквозь них. Съезжают набок с яростью.
+      return {
+        behind: '',
+        front: wrap(`
+          <path d="M35 53 h20 a3 3 0 0 1 3 3 v6 a8 8 0 0 1 -8 8 h-10 a8 8 0 0 1 -8 -8 v-6 a3 3 0 0 1 3 -3 Z" fill="#3A2A55" opacity="0.78" stroke="#F5C542" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M65 53 h20 a3 3 0 0 1 3 3 v6 a8 8 0 0 1 -8 8 h-10 a8 8 0 0 1 -8 -8 v-6 a3 3 0 0 1 3 -3 Z" fill="#3A2A55" opacity="0.78" stroke="#F5C542" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M58 57 h4 M32 56 l-8 -4 M88 56 l8 -4" fill="none" stroke="#F5C542" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M38 57 l6 -2 M68 57 l6 -2" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>`),
+        keepEars: true,
+      };
+    case 'roundgold':
+      // Круглые золотые очки на носу: не наклоняются.
+      return {
+        behind: '',
+        front: `
+          <circle cx="45" cy="60" r="11.5" fill="none" stroke="#D4A82A" stroke-width="2.5"/>
+          <circle cx="75" cy="60" r="11.5" fill="none" stroke="#D4A82A" stroke-width="2.5"/>
+          <path d="M56.5 59 q3.5 -3 7 0 M33.5 58 l-9 -3 M86.5 58 l9 -3" fill="none" stroke="#D4A82A" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M38 53 a9 9 0 0 1 5 -3 M68 53 a9 9 0 0 1 5 -3" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>`,
+        keepEars: true,
+      };
+    case 'curls': {
+      // Кудри по верху головы (подпрыгивают с яростью), уши торчат из причёски. Ресницы лиловые: чёрные на чёрной шерсти не видны.
+      const hair = '#4A2F3C';
+      const shine = '#7A5468';
+      return {
+        behind: wrap(`
+          <g fill="${hair}" stroke="${OUTLINE}" stroke-width="2.5">
+            <circle cx="30" cy="48" r="9"/><circle cx="40" cy="38" r="10"/><circle cx="52" cy="31" r="11"/>
+            <circle cx="66" cy="29" r="11"/><circle cx="79" cy="35" r="10"/><circle cx="90" cy="46" r="9"/>
+            <circle cx="24" cy="60" r="7"/><circle cx="96" cy="60" r="7"/>
+          </g>
+          <g fill="${shine}" opacity="0.9">
+            <circle cx="42" cy="34" r="3"/><circle cx="55" cy="26" r="3.5"/><circle cx="69" cy="25" r="3.5"/><circle cx="82" cy="31" r="3"/><circle cx="27" cy="45" r="2.5"/>
+          </g>`),
+        front: `<path d="M35 53 l-6 -4 M36 57 l-7 -2 M85 53 l6 -4 M84 57 l7 -2" fill="none" stroke="#B48EAD" stroke-width="2" stroke-linecap="round"/>`,
+        keepEars: true,
+      };
+    }
     default:
       return { behind: '', front: '' };
   }
@@ -222,7 +308,7 @@ export function renderFace(level: number, cat: CatSkin): string {
   const acc = accessory(cat, lvl);
   return `
     <circle cx="60" cy="60" r="58" fill="${BG_BY_LEVEL[lvl]}" stroke="${OUTLINE}" stroke-width="3"/>
-    ${cat.accessory ? '' : ears(cat, lvl)}
+    ${cat.accessory && !acc.keepEars ? '' : ears(cat, lvl)}
     <ellipse cx="${HEAD.cx}" cy="${HEAD.cy}" rx="${HEAD.rx}" ry="${HEAD.ry}" fill="${p.fur}" stroke="${OUTLINE}" stroke-width="3"/>
     ${markings(cat)}
     ${effects(cat, lvl)}

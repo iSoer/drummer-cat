@@ -52,6 +52,42 @@ export const CATS: readonly CatSkin[] = [
     strike: 'deduce',
     accessory: 'deerstalker',
   },
+  {
+    id: 'vanya',
+    name: 'Ваня',
+    description: 'Бежевый бородач с сигаретой',
+    palette: { fur: '#C8A27A', fur2: '#8B5E3C', eye: '#7A9E3F', nose: '#B5745A', innerEar: '#E8C4A8', pad: '#B5745A' },
+    pawSymbol: '#paw-vanya',
+    strike: 'wave',
+    accessory: 'beard',
+  },
+  {
+    id: 'elman',
+    name: 'Эльман',
+    description: 'Гламурный дерзкий кот с бокалом брюта',
+    palette: { fur: '#EDE4F5', fur2: '#8E44AD', eye: '#1ABC9C', nose: '#D81B8A', innerEar: '#F5C9E6', pad: '#8E44AD' },
+    pawSymbol: '#paw-elman',
+    strike: 'toast',
+    accessory: 'shades',
+  },
+  {
+    id: 'ksyusha',
+    name: 'Ксюша',
+    description: 'Нежная кошечка в золотых очках с плюшевым Ститчем',
+    palette: { fur: '#FBEAEE', fur2: '#F4A7B9', eye: '#9B8FD9', nose: '#F28BA8', innerEar: '#F9C6D0', pad: '#F4A7B9' },
+    pawSymbol: '#paw-ksyusha',
+    strike: 'cuddle',
+    accessory: 'roundgold',
+  },
+  {
+    id: 'kama',
+    name: 'Кама',
+    description: 'Чёрная кошка-модель с кудрями и маникюром',
+    palette: { fur: '#26222C', fur2: '#4B3F55', eye: '#E8C04B', nose: '#1A171C', innerEar: '#7A5C6E', pad: '#3A3340' },
+    pawSymbol: '#paw-kama',
+    strike: 'slash',
+    accessory: 'curls',
+  },
 ];
 
 export function getCat(id: CatId): CatSkin {

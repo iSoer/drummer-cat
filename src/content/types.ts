@@ -1,7 +1,7 @@
 import type { StrikeId } from './strikes';
 
 /** Идентификаторы котов. */
-export type CatId = 'ginger' | 'coal' | 'siam' | 'marine' | 'wizard' | 'sherlock';
+export type CatId = 'ginger' | 'coal' | 'siam' | 'marine' | 'wizard' | 'sherlock' | 'vanya' | 'elman' | 'ksyusha' | 'kama';
 /** Идентификаторы наборов предметов. */
 export type SetId = 'kitchen' | 'desk' | 'living' | 'spacebase' | 'magic' | 'detective';
 /** Тип синтезированного звука при сносе. */
@@ -25,8 +25,8 @@ export interface CatSkin {
   pawSymbol: string;
   /** Стиль удара (см. content/strikes.ts). */
   strike: StrikeId;
-  /** Головной убор на портрете: скрывает уши, наклоняется с ростом ярости. */
-  accessory?: 'helmet' | 'wizard' | 'deerstalker';
+  /** Аксессуар на портрете (см. accessory() в render/portrait.ts): шляпы скрывают уши и наклоняются с ростом ярости; очки, усы и причёски уши оставляют. */
+  accessory?: 'helmet' | 'wizard' | 'deerstalker' | 'beard' | 'shades' | 'roundgold' | 'curls';
 }
 
 export interface GameObject {

@@ -129,6 +129,7 @@ async function boot(): Promise<void> {
       cameraShake(parts, anims, (2 + 9 * power) * strike.shakeMul * (power > 0 ? 1 : 0));
       fx.impactBurst(strike.impact, Math.max(power, strike.minBurst ?? 0), strike.burstColor);
       if (strike.clawAngle !== null) fx.clawMarks(strike.impact, strike.clawAngle, power);
+      if (strike.impactFx && strike.propTip) fx.propBurst(strike.impactFx, strike.propTip, power, mul);
       for (const ev of events) {
         switch (ev.type) {
           case 'wobble':

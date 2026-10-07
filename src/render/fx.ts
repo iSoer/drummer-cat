@@ -34,6 +34,8 @@ export class Fx {
   private sparkIdx = 0;
   private readonly rings: SVGCircleElement[] = [];
   private ringIdx = 0;
+  private readonly motes: SVGRectElement[] = [];
+  private moteIdx = 0;
 
   constructor(
     layer: SVGGElement,
@@ -92,6 +94,13 @@ export class Fx {
       r.style.visibility = 'hidden';
       layer.appendChild(r);
       this.rings.push(r);
+    }
+    for (let i = 0; i < 12; i++) {
+      const m = document.createElementNS(SVG_NS, 'rect');
+      m.setAttribute('class', 'mote');
+      m.style.visibility = 'hidden';
+      layer.appendChild(m);
+      this.motes.push(m);
     }
     for (let i = 0; i < 6; i++) {
       const t = document.createElementNS(SVG_NS, 'text');
@@ -264,6 +273,47 @@ export class Fx {
         { duration: 400 * speedMul, easing: 'linear' },
         () => {
           p.style.visibility = 'hidden';
+        },
+      );
+    }
+  }
+
+  /**
+   * Частицы с предмета в лапе в момент удара (см. `StrikeStyle.impactFx`).
+   * 'ash' — хлопья пепла с сигареты: мало, почти без разлёта, медленно падают и кружатся.
+   * 'splash' — капли брюта из бокала: больше, летят дугой вверх-влево и падают, часть — белые «пузырьки».
+   */
+  propBurst(kind: 'ash' | 'splash', from: { x: number; y: number }, power: number, speedMul: number): void {
+    const ash = kind === 'ash';
+    const n = ash ? 3 + Math.round(3 * power) : 5 + Math.round(4 * power);
+    const boost = 1 + 0.5 * power;
+    for (let i = 0; i < n; i++) {
+      const m = this.motes[this.moteIdx];
+      this.moteIdx = (this.moteIdx + 1) % this.motes.length;
+      const size = ash ? randRange(3, 5.5) : randRange(4, 7);
+      m.setAttribute('width', size.toFixed(1));
+      m.setAttribute('height', size.toFixed(1));
+      m.setAttribute('rx', ash ? '1' : (size / 2).toFixed(1));
+      m.setAttribute('fill', ash ? (i % 2 ? '#B9B9B9' : '#8E8E8E') : i % 3 === 0 ? '#FFFBE6' : '#F7E7A1');
+      m.style.visibility = 'visible';
+      m.style.transformOrigin = '0 0';
+      const dx = ash ? randRange(-24, 24) : randRange(-130, 40) * boost;
+      const vy = ash ? randRange(-12, 10) : randRange(-150, -60) * boost;
+      const g = ash ? 170 : 280;
+      const rot = ash ? randRange(-220, 220) : randRange(-90, 90);
+      const half = size / 2;
+      const at = (t: number): string =>
+        `translate(${(from.x + dx * t - half).toFixed(1)}px, ${(from.y + vy * t + g * t * t - half).toFixed(1)}px) rotate(${(rot * t).toFixed(0)}deg)`;
+      this.anims.run(
+        m,
+        [
+          { transform: at(0), opacity: 1, offset: 0 },
+          { transform: at(0.5), opacity: 1, offset: 0.5 },
+          { transform: at(1), opacity: 0, offset: 1 },
+        ],
+        { duration: (ash ? 520 : 400) * speedMul, easing: 'linear' },
+        () => {
+          m.style.visibility = 'hidden';
         },
       );
     }
