@@ -1,0 +1,152 @@
+:root {
+  --ui-bg: #1f1a17;
+  --ui-bg-2: #2d2622;
+  --ui-text: #fff8ee;
+  --ui-muted: #b8a99a;
+  --ui-accent: #f2a541;
+  --ui-accent-text: #1f1a17;
+  --outline: #1f1a17;
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bottom: env(safe-area-inset-bottom, 0px);
+  --sa-left: env(safe-area-inset-left, 0px);
+  --sa-right: env(safe-area-inset-right, 0px);
+  --app-height: 100dvh;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background: #0f0d0c;
+  color: var(--ui-text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: var(--app-height);
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-bg);
+  overflow: hidden;
+}
+
+@media (min-width: 481px) {
+  .app {
+    box-shadow: 0 0 0 1px #000, 0 20px 60px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.sprites {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+  cursor: pointer;
+  background: #d9a066;
+}
+
+.scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.scene .world,
+.scene .bg,
+.scene .obj,
+.scene .paw {
+  will-change: transform;
+}
+
+.scene .fx,
+.scene .vignette,
+.scene .paw,
+.scene .hint {
+  pointer-events: none;
+}
+
+.scene .pip--full {
+  fill: #ffd166;
+  stroke: var(--outline);
+  stroke-width: 2;
+}
+
+.scene .pip--empty {
+  fill: rgba(0, 0, 0, 0.15);
+  stroke: var(--outline);
+  stroke-width: 2;
+}
+
+.scene .hit-text {
+  font-family: 'Arial Black', Impact, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 900;
+  font-size: 36px;
+  fill: #fff;
+  stroke: var(--outline);
+  stroke-width: 6px;
+  paint-order: stroke;
+  letter-spacing: 1px;
+}
+
+.scene .shard {
+  stroke: var(--outline);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.scene .vignette {
+  transition: opacity 300ms ease;
+}
+
+.scene .hint {
+  font-weight: 800;
+  font-size: 28px;
+  fill: #fff;
+  stroke: var(--outline);
+  stroke-width: 5px;
+  paint-order: stroke;
+  animation: hint-bounce 1s ease-in-out infinite;
+}
+
+@keyframes hint-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene .hint {
+    animation: none;
+  }
+}

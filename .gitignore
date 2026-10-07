@@ -1,0 +1,5 @@
+Lnode_modules/
+dist/
+.idea/
+.DS_Store
+*.log

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="paw-ginger" viewBox="0 0 240 320" overflow="visible">
+    <g stroke-linecap="round" stroke-linejoin="round">
+      <g fill="#1F1A17" stroke="#1F1A17">
+        <line x1="92" y1="100" x2="270" y2="420" stroke-width="96"/>
+        <circle cx="78" cy="78" r="58"/>
+        <circle cx="31" cy="61" r="20"/><circle cx="49" cy="37" r="20"/><circle cx="78" cy="28" r="20"/><circle cx="107" cy="37" r="20"/>
+      </g>
+      <g fill="#F2A541" stroke="#F2A541">
+        <line x1="92" y1="100" x2="270" y2="420" stroke-width="88"/>
+        <circle cx="78" cy="78" r="54"/>
+        <circle cx="31" cy="61" r="16"/><circle cx="49" cy="37" r="16"/><circle cx="78" cy="28" r="16"/><circle cx="107" cy="37" r="16"/>
+      </g>
+      <g stroke-linecap="butt">
+        <line x1="80" y1="156" x2="146" y2="120" stroke="#FFF3E0" stroke-width="26"/>
+        <line x1="122" y1="230" x2="186" y2="194" stroke="#D47B1E" stroke-width="12"/>
+        <line x1="150" y1="278" x2="213" y2="243" stroke="#D47B1E" stroke-width="12"/>
+        <line x1="176" y1="326" x2="240" y2="290" stroke="#D47B1E" stroke-width="12"/>
+      </g>
+      <g stroke="#1F1A17" stroke-width="4" fill="none">
+        <path d="M54 60 L38 47 M69 49 L63 30 M87 49 L93 30"/>
+      </g>
+    </g>
+  </symbol>
+
+  <symbol id="paw-coal" viewBox="0 0 240 320" overflow="visible">
+    <g stroke-linecap="round" stroke-linejoin="round">
+      <g fill="#1F1A17" stroke="#1F1A17">
+        <line x1="92" y1="100" x2="270" y2="420" stroke-width="96"/>
+        <circle cx="78" cy="78" r="58"/>
+        <circle cx="31" cy="61" r="20"/><circle cx="49" cy="37" r="20"/><circle cx="78" cy="28" r="20"/><circle cx="107" cy="37" r="20"/>
+      </g>
+      <g fill="#2B2B33" stroke="#2B2B33">
+        <line x1="92" y1="100" x2="270" y2="420" stroke-width="88"/>
+        <circle cx="78" cy="78" r="54"/>
+        <circle cx="31" cy="61" r="16"/><circle cx="49" cy="37" r="16"/><circle cx="78" cy="28" r="16"/><circle cx="107" cy="37" r="16"/>
+      </g>
+      <line x1="94" y1="141" x2="201" y2="333" stroke="#4A4A57" stroke-width="10" opacity="0.8"/>
+      <path d="M44 92 a36 36 0 0 1 10 -30" fill="none" stroke="#4A4A57" stroke-width="7" opacity="0.8"/>
+      <g stroke="#3F3F4A" stroke-width="4" fill="none">
+        <path d="M54 60 L38 47 M69 49 L63 30 M87 49 L93 30"/>
+      </g>
+    </g>
+  </symbol>
+
+  <symbol id="paw-siam" viewBox="0 0 240 320" overflow="visible">
+    <g stroke-linecap="round" stroke-linejoin="round">
+      <g fill="#1F1A17" stroke="#1F1A17">
+        <line x1="92" y1="100" x2="270" y2="420" stroke-width="96"/>
+        <circle cx="78" cy="78" r="58"/>
+        <circle cx="31" cy="61" r="20"/><circle cx="49" cy="37" r="20"/><circle cx="78" cy="28" r="20"/><circle cx="107" cy="37" r="20"/>
+      </g>
+      <g fill="#F1E3C9" stroke="#F1E3C9">
+        <line x1="92" y1="100" x2="270" y2="420" stroke-width="88"/>
+      </g>
+      <g fill="#5B3A29" stroke="#5B3A29">
+        <line x1="92" y1="100" x2="122" y2="154" stroke-width="88"/>
+        <circle cx="78" cy="78" r="54"/>
+        <circle cx="31" cy="61" r="16"/><circle cx="49" cy="37" r="16"/><circle cx="78" cy="28" r="16"/><circle cx="107" cy="37" r="16"/>
+      </g>
+      <line x1="90" y1="177" x2="162" y2="138" stroke="#8B5E4A" stroke-width="14" opacity="0.6" stroke-linecap="butt"/>
+      <g stroke="#1F1A17" stroke-width="4" fill="none">
+        <path d="M54 60 L38 47 M69 49 L63 30 M87 49 L93 30"/>
+      </g>
+    </g>
+  </symbol>
+</svg>
