@@ -28,6 +28,16 @@ function ears(cat: CatSkin, level: number): string {
 function markings(cat: CatSkin): string {
   const p = cat.palette;
   switch (cat.id) {
+    case 'marine':
+      return `
+        <ellipse cx="60" cy="82" rx="18" ry="11" fill="${p.fur2}" opacity="0.35"/>
+        <path d="M32 64 l10 14 M30 70 l8 10" fill="none" stroke="${p.fur2}" stroke-width="2.5" stroke-linecap="round"/>`;
+    case 'wizard':
+      return `
+        <ellipse cx="60" cy="82" rx="18" ry="11" fill="${p.fur2}" opacity="0.5"/>
+        <path d="M50 38 l-5 6 h5 l-5 7" fill="none" stroke="#E57373" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'sherlock':
+      return `<ellipse cx="60" cy="82" rx="19" ry="12" fill="#A9B4C2"/>`;
     case 'ginger':
       return `
         <path d="M46 36 l5 14 l5 -14 Z M55 33 l5 17 l5 -17 Z M64 36 l5 14 l5 -14 Z" fill="${p.fur2}"/>
@@ -160,22 +170,70 @@ function effects(cat: CatSkin, level: number): string {
   }
 }
 
+/** Головной убор: часть под глазами (шляпа) и поверх (очки). Наклоняется с ростом ярости. */
+function accessory(cat: CatSkin, level: number): { behind: string; front: string } {
+  const tilt = -EAR_ANGLE[level] * 0.35;
+  const lift = level >= 4 ? -3 : 0;
+  const wrap = (inner: string) => `<g transform="translate(0 ${lift}) rotate(${tilt.toFixed(1)} 60 44)">${inner}</g>`;
+  switch (cat.accessory) {
+    case 'helmet': {
+      const glow = (0.55 + 0.09 * level).toFixed(2);
+      return {
+        behind: wrap(`
+          <path d="M20 58 C20 24 40 12 60 12 C80 12 100 24 100 58 Z" fill="#5B7A99" stroke="${OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M24 36 h72" stroke="#3F5873" stroke-width="3"/>
+          <rect x="24" y="38" width="72" height="11" rx="5.5" fill="#FF8C1A" stroke="${OUTLINE}" stroke-width="2.5" opacity="${glow}"/>
+          <path d="M98 36 l9 -14" stroke="${OUTLINE}" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="107" cy="22" r="3.5" fill="#FF3B3B" stroke="${OUTLINE}" stroke-width="2"/>
+          <circle cx="34" cy="28" r="2.2" fill="#C9D6E5"/><circle cx="86" cy="28" r="2.2" fill="#C9D6E5"/>`),
+        front: '',
+      };
+    }
+    case 'wizard':
+      return {
+        behind: wrap(`
+          <path d="M28 34 C40 18 50 8 76 4 C70 14 84 22 92 34 Z" fill="#3B3650" stroke="${OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M36 32 Q60 38 86 32" fill="none" stroke="#D4A017" stroke-width="4"/>
+          <ellipse cx="60" cy="36" rx="46" ry="8" fill="#2E2A3A" stroke="${OUTLINE}" stroke-width="3"/>`),
+        front: `
+          <circle cx="45" cy="60" r="12" fill="none" stroke="${OUTLINE}" stroke-width="2.5"/>
+          <circle cx="75" cy="60" r="12" fill="none" stroke="${OUTLINE}" stroke-width="2.5"/>
+          <path d="M57 60 h6 M33 58 l-8 -3 M87 58 l8 -3" fill="none" stroke="${OUTLINE}" stroke-width="2.5" stroke-linecap="round"/>`,
+      };
+    case 'deerstalker':
+      return {
+        behind: wrap(`
+          <path d="M18 50 C18 22 36 10 60 10 C84 10 102 22 102 50 Z" fill="#8D6E4C" stroke="${OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M24 42 L54 14 M40 48 L80 12 M62 48 L96 22 M28 30 L54 48 M50 16 L92 44" fill="none" stroke="#6B4F35" stroke-width="2"/>
+          <path d="M12 50 Q60 68 108 50 Z" fill="#6B4F35" stroke="${OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M50 12 l10 6 l10 -6" fill="none" stroke="${OUTLINE}" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="60" cy="17" r="3.5" fill="#6B4F35" stroke="${OUTLINE}" stroke-width="2"/>`),
+        front: '',
+      };
+    default:
+      return { behind: '', front: '' };
+  }
+}
+
 /** Разметка портрета для уровня ярости 0..5 (внутренность svg viewBox 0 0 120 120). */
 export function renderFace(level: number, cat: CatSkin): string {
   const lvl = Math.max(0, Math.min(5, level));
   const p = cat.palette;
+  const acc = accessory(cat, lvl);
   return `
     <circle cx="60" cy="60" r="58" fill="${BG_BY_LEVEL[lvl]}" stroke="${OUTLINE}" stroke-width="3"/>
-    ${ears(cat, lvl)}
+    ${cat.accessory ? '' : ears(cat, lvl)}
     <ellipse cx="${HEAD.cx}" cy="${HEAD.cy}" rx="${HEAD.rx}" ry="${HEAD.ry}" fill="${p.fur}" stroke="${OUTLINE}" stroke-width="3"/>
     ${markings(cat)}
     ${effects(cat, lvl)}
+    ${acc.behind}
     ${eye(45, cat, lvl)}
     ${eye(75, cat, lvl)}
     ${brows(lvl)}
     <path d="M56 72 h8 l-4 5 Z" fill="${p.nose}" stroke="${OUTLINE}" stroke-width="2" stroke-linejoin="round"/>
     ${whiskers(lvl)}
-    ${mouth(lvl)}`;
+    ${mouth(lvl)}
+    ${acc.front}`;
 }
 
 /** Портрет в HUD: перерисовывается при смене уровня или кота. */

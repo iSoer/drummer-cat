@@ -116,11 +116,16 @@ export class ObjectView {
     const s = this.cur;
     this.pips.style.display = 'none';
     const dur = 320 * speedMul;
-    const at = (t: number, rotT: number, sc: number, op: number, offset: number): Keyframe => ({
-      transform: `translate(${(v.dx * t).toFixed(1)}px, ${(v.dy * t).toFixed(1)}px) rotate(${(v.rot * rotT).toFixed(1)}deg) scale(${sc})`,
-      opacity: op,
-      offset,
-    });
+    const lift = v.lift ?? 0;
+    const at = (t: number, rotT: number, sc: number, op: number, offset: number): Keyframe => {
+      // Подъём максимален в первой трети полёта и исчезает к концу.
+      const up = lift * Math.sin(Math.min(1, t) * Math.PI);
+      return {
+        transform: `translate(${(v.dx * t).toFixed(1)}px, ${(v.dy * t + up).toFixed(1)}px) rotate(${(v.rot * rotT).toFixed(1)}deg) scale(${sc})`,
+        opacity: op,
+        offset,
+      };
+    };
     const frames: Keyframe[] = v.squash
       ? [
           at(0, 0, 1, 1, 0),

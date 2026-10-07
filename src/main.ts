@@ -7,6 +7,11 @@ import deskSvg from './content/svg/desk.svg?raw';
 import livingSvg from './content/svg/living.svg?raw';
 import backgroundsSvg from './content/svg/backgrounds.svg?raw';
 import pawsSvg from './content/svg/paws.svg?raw';
+import spacebaseSvg from './content/svg/spacebase.svg?raw';
+import magicSvg from './content/svg/magic.svg?raw';
+import detectiveSvg from './content/svg/detective.svg?raw';
+import backgroundsThemedSvg from './content/svg/backgrounds-themed.svg?raw';
+import pawsThemedSvg from './content/svg/paws-themed.svg?raw';
 
 import { CATS, getCat } from './content/cats';
 import { SETS, getSet } from './content/sets';
@@ -42,7 +47,8 @@ function $<T extends HTMLElement>(sel: string): T {
 }
 
 async function boot(): Promise<void> {
-  $('#sprites').innerHTML = kitchenSvg + deskSvg + livingSvg + backgroundsSvg + pawsSvg;
+  $('#sprites').innerHTML =
+    kitchenSvg + deskSvg + livingSvg + backgroundsSvg + pawsSvg + spacebaseSvg + magicSvg + detectiveSvg + backgroundsThemedSvg + pawsThemedSvg;
   initTelegram();
   installFlushOnHide();
 
@@ -115,10 +121,13 @@ async function boot(): Promise<void> {
     const power = powerOf(level);
     sfx.thwack(power);
     fx.speedLines(strike, power, mul);
+    const swingDur = strike.swingMs * mul;
+    if (strike.preImpact === 'bolt' && strike.wandTip) fx.spellBolt(strike.wandTip, strike.impact, power, swingDur);
+    if (strike.preImpact === 'ring') fx.focusRing(strike.impact, power, swingDur);
 
     paw.swing(mul, () => {
       cameraShake(parts, anims, (2 + 9 * power) * strike.shakeMul * (power > 0 ? 1 : 0));
-      fx.impactBurst(strike.impact, power);
+      fx.impactBurst(strike.impact, Math.max(power, strike.minBurst ?? 0), strike.burstColor);
       if (strike.clawAngle !== null) fx.clawMarks(strike.impact, strike.clawAngle, power);
       for (const ev of events) {
         switch (ev.type) {

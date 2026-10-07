@@ -25,6 +25,33 @@ export const CATS: readonly CatSkin[] = [
     pawSymbol: '#paw-siam',
     strike: 'slam',
   },
+  {
+    id: 'marine',
+    name: 'Сержант',
+    description: 'Космодесантник в силовой броне',
+    palette: { fur: '#8C7B6B', fur2: '#5E514A', eye: '#FF8C1A', nose: '#4A3F38', innerEar: '#B59A88', pad: '#5E514A' },
+    pawSymbol: '#paw-marine',
+    strike: 'pump',
+    accessory: 'helmet',
+  },
+  {
+    id: 'wizard',
+    name: 'Гарри',
+    description: 'Юный волшебник в очках',
+    palette: { fur: '#2E2A3A', fur2: '#4A4560', eye: '#4CAF50', nose: '#4A3F5C', innerEar: '#7A6E8C', pad: '#4A4560' },
+    pawSymbol: '#paw-wizard',
+    strike: 'spell',
+    accessory: 'wizard',
+  },
+  {
+    id: 'sherlock',
+    name: 'Шерлок',
+    description: 'Сыщик с Бейкер-стрит',
+    palette: { fur: '#8A98A8', fur2: '#6B7886', eye: '#E8A33D', nose: '#5C5C66', innerEar: '#C7B1B6', pad: '#6B7886' },
+    pawSymbol: '#paw-sherlock',
+    strike: 'deduce',
+    accessory: 'deerstalker',
+  },
 ];
 
 export function getCat(id: CatId): CatSkin {

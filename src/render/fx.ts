@@ -30,6 +30,10 @@ export class Fx {
   private lineIdx = 0;
   private readonly claws: SVGGElement[] = [];
   private clawIdx = 0;
+  private readonly sparks: SVGPolygonElement[] = [];
+  private sparkIdx = 0;
+  private readonly rings: SVGCircleElement[] = [];
+  private ringIdx = 0;
 
   constructor(
     layer: SVGGElement,
@@ -74,6 +78,22 @@ export class Fx {
       this.claws.push(g);
     }
     for (let i = 0; i < 6; i++) {
+      const sp = document.createElementNS(SVG_NS, 'polygon');
+      sp.setAttribute('class', 'spark');
+      sp.setAttribute('points', starPoints(4, 0.4));
+      sp.style.visibility = 'hidden';
+      layer.appendChild(sp);
+      this.sparks.push(sp);
+    }
+    for (let i = 0; i < 2; i++) {
+      const r = document.createElementNS(SVG_NS, 'circle');
+      r.setAttribute('class', 'focus-ring');
+      r.setAttribute('r', '1');
+      r.style.visibility = 'hidden';
+      layer.appendChild(r);
+      this.rings.push(r);
+    }
+    for (let i = 0; i < 6; i++) {
       const t = document.createElementNS(SVG_NS, 'text');
       t.setAttribute('class', 'hit-text');
       t.setAttribute('text-anchor', 'middle');
@@ -84,10 +104,11 @@ export class Fx {
   }
 
   /** Вспышка-звезда в точке удара; размер растёт с силой. Нет при силе 0. */
-  impactBurst(at: { x: number; y: number }, power: number): void {
+  impactBurst(at: { x: number; y: number }, power: number, color = '#FFF6C7'): void {
     if (power <= 0) return;
     const b = this.bursts[this.burstIdx];
     this.burstIdx = (this.burstIdx + 1) % this.bursts.length;
+    b.style.fill = color;
     const size = 22 + 50 * power;
     const rot = randRange(-20, 20);
     b.style.visibility = 'visible';
@@ -106,9 +127,60 @@ export class Fx {
     );
   }
 
+  /** Искры от кончика палочки к точке удара (стиль «Заклинание»). */
+  spellBolt(from: { x: number; y: number }, to: { x: number; y: number }, power: number, durationMs: number): void {
+    const n = 3 + Math.round(2 * power);
+    const dur = Math.max(80, durationMs);
+    const colors = ['#B388FF', '#FFD166', '#E1BEE7'];
+    for (let i = 0; i < n; i++) {
+      const sp = this.sparks[this.sparkIdx];
+      this.sparkIdx = (this.sparkIdx + 1) % this.sparks.length;
+      sp.style.fill = colors[i % colors.length];
+      sp.style.visibility = 'visible';
+      sp.style.transformOrigin = '0 0';
+      const side = randRange(-30, 30);
+      const mx = (from.x + to.x) / 2 + side;
+      const my = (from.y + to.y) / 2 - 30 + randRange(-10, 10);
+      const sc = 5 + 5 * power + randRange(0, 3);
+      this.anims.run(
+        sp,
+        [
+          { transform: `translate(${from.x}px, ${from.y}px) rotate(0deg) scale(${sc * 0.6})`, opacity: 1, offset: 0 },
+          { transform: `translate(${mx}px, ${my}px) rotate(90deg) scale(${sc})`, opacity: 1, offset: 0.5 },
+          { transform: `translate(${to.x}px, ${to.y}px) rotate(180deg) scale(${sc * 0.5})`, opacity: 0, offset: 1 },
+        ],
+        { duration: dur, delay: i * dur * 0.12, easing: 'ease-in' },
+        () => {
+          sp.style.visibility = 'hidden';
+        },
+      );
+    }
+  }
+
+  /** Прицельное кольцо, сжимающееся к предмету (стиль «Дедукция»). */
+  focusRing(at: { x: number; y: number }, power: number, durationMs: number): void {
+    const r = this.rings[this.ringIdx];
+    this.ringIdx = (this.ringIdx + 1) % this.rings.length;
+    const size = 60 + 20 * power;
+    r.style.visibility = 'visible';
+    r.style.transformOrigin = '0 0';
+    this.anims.run(
+      r,
+      [
+        { transform: `translate(${at.x}px, ${at.y}px) scale(${size * 1.6})`, opacity: 0, offset: 0 },
+        { transform: `translate(${at.x}px, ${at.y}px) scale(${size})`, opacity: 1, offset: 0.6 },
+        { transform: `translate(${at.x}px, ${at.y}px) scale(${size * 0.8})`, opacity: 0, offset: 1 },
+      ],
+      { duration: Math.max(140, durationMs + 100), easing: 'ease-out' },
+      () => {
+        r.style.visibility = 'hidden';
+      },
+    );
+  }
+
   /** Линии скорости вдоль траектории удара; появляются с силы 0.5. */
   speedLines(style: StrikeStyle, power: number, speedMul: number): void {
-    if (power < 0.5) return;
+    if (power < 0.5 || style.speedAngle === null) return;
     const n = 3 + Math.round(2 * power);
     const a = (style.speedAngle * Math.PI) / 180;
     const dx = Math.cos(a);
