@@ -29,7 +29,8 @@ npm run preview    # локальный просмотр dist/
 
 1. В [@BotFather](https://t.me/BotFather) создать бота (`/newbot`).
 2. `/newapp` → выбрать бота → указать URL сайта `https://isoer.github.io/drummer-cat/`. Либо `/setmenubutton` → URL — кнопка меню в чате с ботом.
-3. Открыть Mini App в Telegram. Код бота не нужен: прогресс хранится в `CloudStorage` и `localStorage`.
+3. На шаге с фото загрузить `promo/miniapp-cover-640x360.png` (BotFather требует ровно 640×360). Там же лежат версия 1280×720 и исходник `miniapp-cover.svg`.
+4. Открыть Mini App в Telegram. Код бота не нужен: прогресс хранится в `CloudStorage` и `localStorage`.
 
 ## Структура
 
