@@ -65,6 +65,23 @@ describe('Engine', () => {
     }
   });
 
+  it('следующий предмет известен заранее и становится текущим после сноса', () => {
+    const e = new Engine(KITCHEN, undefined, Math.random);
+    for (let i = 0; i < 50; i++) {
+      const promised = e.next.obj;
+      expect(promised.id).not.toBe(e.current.obj.id);
+      let ev = e.hit();
+      while (ev[0].type === 'wobble') ev = e.hit();
+      const step = ev[1];
+      expect(step.type).toBe('step');
+      expect(e.current.obj).toBe(promised);
+      if (step.type === 'step') {
+        expect(step.obj).toBe(promised);
+        expect(step.next).toBe(e.next.obj);
+      }
+    }
+  });
+
   it('смена набора заменяет предмет без счёта', () => {
     const e = new Engine(KITCHEN, undefined, first);
     const seqBefore = e.seq;
@@ -72,6 +89,8 @@ describe('Engine', () => {
     expect(DESK.objects.some((o) => o.id === cur.obj.id)).toBe(true);
     expect(e.seq).toBe(seqBefore);
     expect(e.counters.knocked).toBe(0);
+    expect(DESK.objects.some((o) => o.id === e.next.obj.id)).toBe(true);
+    expect(e.next.obj.id).not.toBe(cur.obj.id);
     expect(e.setObjectSet(DESK)).toBe(cur);
   });
 });

@@ -10,7 +10,7 @@ export interface CurrentObject {
 export type EngineEvent =
   | { type: 'wobble'; obj: GameObject; hp: number; maxHp: number }
   | { type: 'knock'; obj: GameObject; knocked: number }
-  | { type: 'step'; obj: GameObject; hp: number; maxHp: number };
+  | { type: 'step'; obj: GameObject; hp: number; maxHp: number; next: GameObject };
 
 export interface EngineCounters {
   knocked: number;
@@ -22,9 +22,13 @@ export const HEAVY_EVERY = 10;
 /** Каждый N-й предмет — «босс» набора. */
 export const BOSS_EVERY = 30;
 
-/** Игровая логика: удары, снос, выбор следующего предмета. Ничего не знает о DOM. */
+/**
+ * Игровая логика: удары, снос, выбор предметов. Ничего не знает о DOM.
+ * Следующий предмет выбирается заранее (`next`), чтобы рендер показывал его силуэт вдали.
+ */
 export class Engine {
   current!: CurrentObject;
+  next!: CurrentObject;
   /** Порядковый номер текущего предмета в сессии (с 1). */
   seq = 0;
   readonly counters: EngineCounters;
@@ -36,7 +40,9 @@ export class Engine {
     this.set = set;
     this.counters = counters;
     this.rng = rng;
-    this.advance();
+    this.seq = 1;
+    this.current = this.pick(this.seq);
+    this.next = this.pick(this.seq + 1);
   }
 
   get objectSet(): ObjectSet {
@@ -53,39 +59,40 @@ export class Engine {
     }
     this.counters.knocked += 1;
     const knocked = { type: 'knock' as const, obj: cur.obj, knocked: this.counters.knocked };
-    this.advance();
-    const next = this.current;
-    return [knocked, { type: 'step', obj: next.obj, hp: next.hp, maxHp: next.maxHp }];
+    this.seq += 1;
+    this.current = this.next;
+    this.next = this.pick(this.seq + 1);
+    const c = this.current;
+    return [knocked, { type: 'step', obj: c.obj, hp: c.hp, maxHp: c.maxHp, next: this.next.obj }];
   }
 
-  /** Сменить набор: текущий предмет немедленно заменяется, без шага и без счётчика. */
+  /** Сменить набор: текущий и следующий предметы заменяются немедленно, без шага и без счётчика. */
   setObjectSet(set: ObjectSet): CurrentObject {
     if (set.id === this.set.id) return this.current;
     this.set = set;
     this.history = [];
-    this.seq -= 1;
-    this.advance();
+    this.current = this.pick(this.seq);
+    this.next = this.pick(this.seq + 1);
     return this.current;
   }
 
-  private advance(): void {
-    this.seq += 1;
-    const obj = this.nextObject();
+  private pick(seq: number): CurrentObject {
+    const obj = this.chooseFor(seq);
     this.history.push(obj.id);
     if (this.history.length > 2) this.history.shift();
-    this.current = { obj, hp: obj.hp, maxHp: obj.hp };
+    return { obj, hp: obj.hp, maxHp: obj.hp };
   }
 
-  private nextObject(): GameObject {
+  private chooseFor(seq: number): GameObject {
     const all = this.set.objects;
     let pool: GameObject[];
-    if (this.seq % BOSS_EVERY === 0) {
+    if (seq % BOSS_EVERY === 0) {
       pool = all.filter((o) => o.hp >= 5);
       if (pool.length === 0) {
         const max = Math.max(...all.map((o) => o.hp));
         pool = all.filter((o) => o.hp === max);
       }
-    } else if (this.seq % HEAVY_EVERY === 0) {
+    } else if (seq % HEAVY_EVERY === 0) {
       pool = all.filter((o) => o.hp >= 2);
     } else {
       pool = all;

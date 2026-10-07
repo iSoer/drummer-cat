@@ -92,6 +92,10 @@ body {
   pointer-events: none;
 }
 
+.scene .obj--ghost {
+  pointer-events: none;
+}
+
 .scene .pip--full {
   fill: #ffd166;
   stroke: var(--outline);

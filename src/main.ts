@@ -62,7 +62,7 @@ async function boot(): Promise<void> {
   const paw = new PawView(parts.paw, parts.pawUse, anims);
   paw.setSkin(cat.pawSymbol);
   const objView = new ObjectView(parts.objects, anims);
-  objView.show(engine.current.obj, engine.current.hp, engine.current.maxHp);
+  objView.show(engine.current.obj, engine.current.hp, engine.current.maxHp, engine.next.obj);
   const fx = new Fx(parts.fx, anims);
   const portrait = new PortraitView($('#portrait'), cat);
   const hud = new Hud();
@@ -133,7 +133,7 @@ async function boot(): Promise<void> {
           case 'step': {
             const delay = 320 * mul * 0.55;
             stepBob(parts, anims, mul, delay);
-            objView.appear(ev.obj, ev.hp, ev.maxHp, mul, delay);
+            objView.appear(ev.obj, ev.hp, ev.maxHp, ev.next, mul, delay);
             break;
           }
         }
@@ -185,7 +185,7 @@ async function boot(): Promise<void> {
     anims.finishAll();
     setBackground(parts, set.backgroundSymbol);
     const cur = engine.setObjectSet(set);
-    objView.show(cur.obj, cur.hp, cur.maxHp);
+    objView.show(cur.obj, cur.hp, cur.maxHp, engine.next.obj);
     store.set({ set: id });
     tgSelectionChanged();
   };

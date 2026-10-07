@@ -1,21 +1,32 @@
 import type { GameObject } from '../content/types';
 import { AnimGroup } from './anim';
-import { OBJ_BASE, OBJ_SIZE } from './scene';
+import { FAR_OFFSET_X, FAR_OFFSET_Y, FAR_SCALE, OBJ_BASE, OBJ_SIZE } from './scene';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MAX_DMG = 4;
 const PIP_R = 4.5;
 const PIP_GAP = 14;
 
+const NEAR_POSE = 'translate(0, 0) scale(1)';
+const FAR_POSE = `translate(${FAR_OFFSET_X}px, ${FAR_OFFSET_Y}px) scale(${FAR_SCALE})`;
+/** Доля шага, за которую силуэт растворяется, а предмет проявляется. */
+const REVEAL_AT = 0.6;
+const MID_POSE = `translate(${FAR_OFFSET_X * (1 - REVEAL_AT)}px, ${FAR_OFFSET_Y * (1 - REVEAL_AT)}px) scale(${FAR_SCALE + (1 - FAR_SCALE) * REVEAL_AT})`;
+
 interface Slot {
   g: SVGGElement;
   use: SVGUseElement;
 }
 
-/** Предмет на столе: два слота (текущий и улетающий), пипсы HP, слои повреждений. */
+/**
+ * Предметы на столе: два слота для текущего/улетающего предмета, два слота-силуэта
+ * для следующего предмета вдали, пипсы HP и слои повреждений.
+ */
 export class ObjectView {
   private readonly slots: Slot[];
   private active = 0;
+  private readonly ghosts: Slot[];
+  private activeGhost = 0;
   private readonly pips: SVGGElement;
   private readonly pipEls: SVGCircleElement[] = [];
 
@@ -23,7 +34,8 @@ export class ObjectView {
     layer: SVGGElement,
     private readonly anims: AnimGroup,
   ) {
-    this.slots = [this.makeSlot(layer), this.makeSlot(layer)];
+    this.ghosts = [this.makeSlot(layer, true), this.makeSlot(layer, true)];
+    this.slots = [this.makeSlot(layer, false), this.makeSlot(layer, false)];
     this.pips = document.createElementNS(SVG_NS, 'g');
     this.pips.setAttribute('class', 'pips');
     for (let i = 0; i < 5; i++) {
@@ -37,9 +49,9 @@ export class ObjectView {
     layer.appendChild(this.pips);
   }
 
-  private makeSlot(layer: SVGGElement): Slot {
+  private makeSlot(layer: SVGGElement, ghost: boolean): Slot {
     const g = document.createElementNS(SVG_NS, 'g');
-    g.setAttribute('class', 'obj');
+    g.setAttribute('class', ghost ? 'obj obj--ghost' : 'obj');
     g.style.transformOrigin = `${OBJ_BASE.x}px ${OBJ_BASE.y}px`;
     g.style.visibility = 'hidden';
     const use = document.createElementNS(SVG_NS, 'use');
@@ -47,7 +59,8 @@ export class ObjectView {
     use.setAttribute('y', String(OBJ_BASE.y - OBJ_SIZE * 0.9));
     use.setAttribute('width', String(OBJ_SIZE));
     use.setAttribute('height', String(OBJ_SIZE));
-    use.style.transformOrigin = `${OBJ_BASE.x}px ${OBJ_BASE.y}px`;
+    if (ghost) use.setAttribute('filter', 'url(#silhouette)');
+    else use.style.transformOrigin = `${OBJ_BASE.x}px ${OBJ_BASE.y}px`;
     g.appendChild(use);
     layer.appendChild(g);
     return { g, use };
@@ -57,15 +70,22 @@ export class ObjectView {
     return this.slots[this.active];
   }
 
-  /** Показать предмет сразу, без анимации. */
-  show(obj: GameObject, hp: number, maxHp: number): void {
+  /** Показать текущий предмет и силуэт следующего сразу, без анимации. */
+  show(obj: GameObject, hp: number, maxHp: number, next: GameObject): void {
     const s = this.cur;
     this.fill(s, obj, hp, maxHp);
-    s.g.style.transform = 'none';
+    s.g.style.transform = NEAR_POSE;
     s.g.style.opacity = '1';
     s.g.style.visibility = 'visible';
     this.updatePips(hp, maxHp);
     this.pips.style.display = maxHp > 1 ? '' : 'none';
+
+    const gh = this.ghosts[this.activeGhost];
+    gh.use.setAttribute('href', next.symbol);
+    gh.g.style.transform = FAR_POSE;
+    gh.g.style.opacity = '1';
+    gh.g.style.visibility = 'visible';
+    this.ghosts[1 - this.activeGhost].g.style.visibility = 'hidden';
   }
 
   setHp(hp: number, maxHp: number): void {
@@ -85,7 +105,7 @@ export class ObjectView {
       ],
       { duration: 160 * speedMul, easing: 'ease-out' },
       () => {
-        this.cur.g.style.transform = 'none';
+        this.cur.g.style.transform = NEAR_POSE;
       },
     );
   }
@@ -106,7 +126,7 @@ export class ObjectView {
       { duration: dur, easing: 'ease-in' },
       () => {
         s.g.style.visibility = 'hidden';
-        s.g.style.transform = 'none';
+        s.g.style.transform = NEAR_POSE;
         s.g.style.opacity = '1';
       },
     );
@@ -114,11 +134,17 @@ export class ObjectView {
     return dur;
   }
 
-  /** Появление нового предмета (после шага). */
-  appear(obj: GameObject, hp: number, maxHp: number, speedMul: number, delay = 0): void {
+  /**
+   * Шаг вперёд: силуэт следующего предмета едет с дальней позиции на ближнюю и растворяется,
+   * на его месте проявляется цветной предмет; вдали проявляется силуэт нового следующего.
+   */
+  appear(obj: GameObject, hp: number, maxHp: number, next: GameObject, speedMul: number, delay = 0): void {
+    const dur = 260 * speedMul;
+    const easing = 'ease-out';
+
     const s = this.cur;
     this.fill(s, obj, hp, maxHp);
-    s.g.style.transform = 'translateY(40px) scale(0.6)';
+    s.g.style.transform = FAR_POSE;
     s.g.style.opacity = '0';
     s.g.style.visibility = 'visible';
     this.updatePips(hp, maxHp);
@@ -126,16 +152,48 @@ export class ObjectView {
     this.anims.run(
       s.g,
       [
-        { transform: 'translateY(40px) scale(0.6)', opacity: 0 },
-        { transform: 'translateY(0) scale(1)', opacity: 1 },
+        { transform: FAR_POSE, opacity: 0, offset: 0 },
+        { transform: MID_POSE, opacity: 1, offset: REVEAL_AT },
+        { transform: NEAR_POSE, opacity: 1, offset: 1 },
       ],
-      { duration: 260 * speedMul, delay, easing: 'ease-out' },
+      { duration: dur, delay, easing },
       () => {
-        s.g.style.transform = 'none';
+        s.g.style.transform = NEAR_POSE;
         s.g.style.opacity = '1';
         this.pips.style.display = maxHp > 1 ? '' : 'none';
       },
     );
+
+    const gh = this.ghosts[this.activeGhost];
+    this.anims.run(
+      gh.g,
+      [
+        { transform: FAR_POSE, opacity: 1, offset: 0 },
+        { transform: MID_POSE, opacity: 0, offset: REVEAL_AT },
+        { transform: NEAR_POSE, opacity: 0, offset: 1 },
+      ],
+      { duration: dur, delay, easing },
+      () => {
+        gh.g.style.visibility = 'hidden';
+        gh.g.style.transform = FAR_POSE;
+        gh.g.style.opacity = '1';
+      },
+    );
+
+    const nextGhost = this.ghosts[1 - this.activeGhost];
+    nextGhost.use.setAttribute('href', next.symbol);
+    nextGhost.g.style.transform = FAR_POSE;
+    nextGhost.g.style.opacity = '0';
+    nextGhost.g.style.visibility = 'visible';
+    this.anims.run(
+      nextGhost.g,
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: dur * 0.6, delay: delay + dur * 0.4, easing },
+      () => {
+        nextGhost.g.style.opacity = '1';
+      },
+    );
+    this.activeGhost = 1 - this.activeGhost;
   }
 
   private fill(s: Slot, obj: GameObject, hp: number, maxHp: number): void {

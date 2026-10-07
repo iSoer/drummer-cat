@@ -4,6 +4,10 @@ export const SCENE_W = 360;
 export const SCENE_H = 640;
 /** Точка опоры предмета в координатах сцены. */
 export const OBJ_BASE = { x: 180, y: 480 };
+/** Дальняя позиция (силуэт следующего предмета): смещение и масштаб относительно OBJ_BASE. */
+export const FAR_OFFSET_X = -58;
+export const FAR_OFFSET_Y = -76;
+export const FAR_SCALE = 0.5;
 /** Размер отрисовки символа предмета (viewBox 200×200). */
 export const OBJ_SIZE = 200;
 /** Точка вращения лапы («плечо»). */
@@ -33,6 +37,9 @@ export function buildScene(container: HTMLElement): SceneParts {
       <stop offset="50%" stop-color="#B3001B" stop-opacity="0"/>
       <stop offset="100%" stop-color="#B3001B" stop-opacity="1"/>
     </radialGradient>
+    <filter id="silhouette" color-interpolation-filters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
+      <feColorMatrix type="matrix" values="0 0 0 0 0.20  0 0 0 0 0.16  0 0 0 0 0.14  0 0 0 1 0"/>
+    </filter>
   </defs>
   <g class="world">
     <g class="bg"><use class="bg__use" href="#bg-kitchen" width="${SCENE_W}" height="${SCENE_H}"/></g>
